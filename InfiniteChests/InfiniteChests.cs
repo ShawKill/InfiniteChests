@@ -129,29 +129,43 @@ namespace InfiniteChests
 							}
 							break;
 						case PacketTypes.ChestOpen:
-							{
-								if (reader.ReadInt16() == -1)
-								{
-									if (Infos[plr].TransactionsLeft > 0)
-										Infos[plr].ShouldCloseAfterTransactions = true;
-									else
-									{
-										Infos[plr].X = -1;
-										Infos[plr].Y = -1;
-									}
-								}
-								else if (Infos[plr].TransactionsLeft > 0)
-								{
-									return;
-								}
-								int x = reader.ReadInt16();
-								int y = reader.ReadInt16();
-								int length = reader.ReadByte();
+						{
+							int action = reader.ReadInt16();
+							int x = reader.ReadInt16();
+							int y = reader.ReadInt16();
 
-								if (length != 0 && length <= 20 && length != 255)
-									TShock.Players[plr].SendData(PacketTypes.ChestName, "", 0, x, y);
+							if (action == -1)
+							{
+								if (Infos[plr].TransactionsLeft > 0)
+								{
+									//user closed the chest, but still have items transferring, close when it finishes.
+									Infos[plr].ShouldCloseAfterTransactions = true;
+								}
+								else
+								{
+									Infos[plr].X = -1;
+									Infos[plr].Y = -1;
+								}
 							}
-							break;
+							else if (Infos[plr].TransactionsLeft > 0)
+							{
+								//the user is still transfering items, they shouldnt be allowed to open another chest until that finishes.
+								return;
+							}
+#if !MULTI_USE
+							if (Infos.Any(p => p.X == x && p.Y == y))
+							{
+								//chest is in use, ignore
+								TShock.Players[plr].SendErrorMessage("This chest is currently open by someone else.");
+								return;
+							}
+#endif
+							int length = reader.ReadByte();
+
+							if (length != 0 && length <= 20 && length != 255)
+								TShock.Players[plr].SendData(PacketTypes.ChestName, "", 0, x, y);
+						}
+						break;
 						case PacketTypes.TileKill:
 							{
 								if (Infos[plr].TransactionsLeft > 0)
@@ -275,7 +289,7 @@ namespace InfiniteChests
 			}
 			SqlTableCreator sqlcreator = new SqlTableCreator(Database,
 				Database.GetSqlType() == SqlType.Sqlite ? (IQueryBuilder)new SqliteQueryCreator() : new MysqlQueryCreator());
-			sqlcreator.EnsureExists(new SqlTable("Chests",
+			sqlcreator.EnsureTableStructure(new SqlTable("Chests",
 				new SqlColumn("ID", MySqlDbType.Int32) { AutoIncrement = true, Primary = true },
 				new SqlColumn("X", MySqlDbType.Int32),
 				new SqlColumn("Y", MySqlDbType.Int32),
@@ -287,7 +301,7 @@ namespace InfiniteChests
 				new SqlColumn("Password", MySqlDbType.Text),
 				new SqlColumn("WorldID", MySqlDbType.Int32)));
 
-			sqlcreator.EnsureExists(new SqlTable("BankChests",
+			sqlcreator.EnsureTableStructure(new SqlTable("BankChests",
 				new SqlColumn("ID", MySqlDbType.Int32) { AutoIncrement = true, Primary = true },
 				new SqlColumn("Account", MySqlDbType.Text),
 				new SqlColumn("BankID", MySqlDbType.Int32),
