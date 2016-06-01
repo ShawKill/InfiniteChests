@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using Mono.Data.Sqlite;
@@ -33,7 +32,7 @@ namespace InfiniteChests
 		}
 		public override string Description
 		{
-			get { return "Allows for infinite chests, and supports all chest control commands."; }
+			get { return "添加服务器对无限宝箱的支持, 以及管理指令."; }
 		}
 		public override string Name
 		{
@@ -156,7 +155,7 @@ namespace InfiniteChests
 							if (Infos.Any(p => p.X == x && p.Y == y))
 							{
 								//chest is in use, ignore
-								TShock.Players[plr].SendErrorMessage("This chest is currently open by someone else.");
+								TShock.Players[plr].SendErrorMessage("该箱子正被别人使用中, 请等待.");
 								return;
 							}
 #endif
@@ -209,63 +208,63 @@ namespace InfiniteChests
 			Commands.ChatCommands.Add(new Command("infchests.chest.bank", Bank, "cbank")
 			{
 				DoLog = false,
-				HelpText = "Toggles a chests's bank status when selected."
+				HelpText = "转换选中箱子的储蓄状态."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.chest.deselect", Deselect, "ccset")
 			{
 				AllowServer = false,
-				HelpText = "Cancels a chest selection."
+				HelpText = "取消对选中箱子的[c/FF00FF:选择]."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.admin.info", Info, "cinfo")
 			{
 				AllowServer = false,
-				HelpText = "Gets information about a chest when selected."
+				HelpText = "获取选中箱子的信息."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.chest.lock", Lock, "clock")
 			{
 				DoLog = false,
-				HelpText = "Locks a chest with a password. Use remove as the password to remove it."
+				HelpText = "使用密码保护选中箱子. 输入 \"remove\" 作为密码以除去保护."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.admin.convert", ConvertChests, "convchests")
 			{
-				HelpText = "Converts Terraria chests to InfiniteChests chests."
+				HelpText = "转换地图中的宝箱数据至数据库."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.admin.prune", Prune, "prunechests")
 			{
-				HelpText = "Prunes empty chests."
+				HelpText = "去除空箱子."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.chest.public", PublicProtect, "cpset")
 			{
 				AllowServer = false,
-				HelpText = "Toggles a chest's publicity when selected."
+				HelpText = "转换选中箱子的公共状态."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.admin.refill", Refill, "crefill")
 			{
 				AllowServer = false,
-				HelpText = "Toggles a chest's refill status (with optional refill time) when selected."
+				HelpText = "转换选中箱子的自动填充状态."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.chest.region", RegionProtect, "crset")
 			{
 				AllowServer = false,
-				HelpText = "Toggles a chest's region sharing status when selected."
+				HelpText = "转换选中箱子的区域共享状态."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.admin.rconvert", ReverseConvertChests, "rconvchests")
 			{
-				HelpText = "Converts InfiniteChests chests to Terraria chests."
+				HelpText = "转换数据库中的宝箱数据至地图."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.chest.protect", Protect, "cset")
 			{
 				AllowServer = false,
-				HelpText = "Protects an unprotected chest when selected."
+				HelpText = "保护选中箱子."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.chest.unlock", Unlock, "cunlock")
 			{
 				DoLog = false,
-				HelpText = "Unlocks a chest with a password."
+				HelpText = "使用密码解锁选中箱子."
 			});
 			Commands.ChatCommands.Add(new Command("infchests.chest.unprotect", Unprotect, "cunset")
 			{
-				HelpText = "Unprotects a chest when selected."
+				HelpText = "取消选中箱子的保护."
 			});
 
 			switch (TShock.Config.StorageType.ToLower())
@@ -332,7 +331,7 @@ namespace InfiniteChests
 
 			if (converted > 0)
 			{
-				TSPlayer.Server.SendSuccessMessage("[InfiniteChests] Converted {0} chest{1}.", converted, converted == 1 ? "" : "s");
+				TSPlayer.Server.SendSuccessMessage("[InfiniteChests] 转换了 {0} 个箱子数据至数据库.", converted);
 				TShock.Utils.SaveWorld();
 			}
 		}
@@ -372,15 +371,15 @@ namespace InfiniteChests
 				switch (info.Action)
 				{
 					case ChestAction.GetInfo:
-						player.SendInfoMessage("X: {0} Y: {1} Account: {2} {3}Bank: {4} Refill: {5} ({6} second{7}) Region: {8}",
-							x, y, chest.Account ?? "N/A", chest.Flags.HasFlag(ChestFlags.Public) ? "(public) " : "",
+						player.SendInfoMessage("X: {0} Y: {1} 用户: {2} {3}储蓄: {4} 自动填充: {5} ({6}s) 区域: {8}",
+							x, y, chest.Account ?? "无", chest.Flags.HasFlag(ChestFlags.Public) ? "(公共) " : "",
 							chest.BankID, chest.Flags.HasFlag(ChestFlags.Refill), chest.RefillTime,
-							chest.RefillTime == 1 ? "" : "s", chest.Flags.HasFlag(ChestFlags.Region));
+							chest.Flags.HasFlag(ChestFlags.Region));
 						break;
 					case ChestAction.Protect:
 						if (!String.IsNullOrEmpty(chest.Account))
 						{
-							player.SendErrorMessage("This chest is already protected.");
+							player.SendErrorMessage("此箱子已被保护.");
 							break;
 						}
 						Database.Query("UPDATE Chests SET Account = @0 WHERE ID = @1", player.User.Name, chest.ID);
@@ -389,46 +388,46 @@ namespace InfiniteChests
 					case ChestAction.TogglePublic:
 						if (String.IsNullOrEmpty(chest.Account))
 						{
-							player.SendErrorMessage("This chest is not protected.");
+							player.SendErrorMessage("此箱子未被保护.");
 							break;
 						}
 						if (chest.Account != player.User.Name && !player.Group.HasPermission("infchests.admin.editall"))
 						{
-							player.SendErrorMessage("This chest is not yours.");
+							player.SendErrorMessage("你不是此箱子的主人!");
 							break;
 						}
 						Database.Query("UPDATE Chests SET Flags = ((~(Flags & 1)) & (Flags | 1)) WHERE ID = @0", chest.ID);
-						player.SendSuccessMessage("This chest is now p{0}.", chest.IsPublic ? "rivate" : "ublic");
+						player.SendSuccessMessage("该箱子现在是{0}状态.", chest.IsPublic ? "私人" : "公共");
 						break;
 					case ChestAction.ToggleRegion:
 						if (String.IsNullOrEmpty(chest.Account))
 						{
-							player.SendErrorMessage("This chest is not protected.");
+							player.SendErrorMessage("此箱子未被保护.");
 							break;
 						}
 						if (chest.Account != player.User.Name && !player.Group.HasPermission("infchests.admin.editall"))
 						{
-							player.SendErrorMessage("This chest is not yours.");
+							player.SendErrorMessage("你不是此箱子的主人!");
 							break;
 						}
 						Database.Query("UPDATE Chests SET Flags = ((~(Flags & 2)) & (Flags | 2)) WHERE ID = @0", chest.ID);
-						player.SendSuccessMessage("This chest is no{0} region shared.", chest.IsRegion ? " longer" : "w");
+						player.SendSuccessMessage("已{0}该箱子的区域共享状态.", chest.IsRegion ? "关闭" : "开启");
 						break;
 					case ChestAction.SetBank:
 						if (String.IsNullOrEmpty(chest.Account))
 						{
-							player.SendErrorMessage("This chest is not protected.");
+							player.SendErrorMessage("此箱子未被保护.");
 							break;
 						}
 						if (chest.Account != player.User.Name && !player.Group.HasPermission("infchests.admin.editall"))
 						{
-							player.SendErrorMessage("This chest is not yours.");
+							player.SendErrorMessage("你不是此箱子的主人!");
 							break;
 						}
 						if (info.BankID == -1)
 						{
 							Database.Query("UPDATE Chests SET BankID = 0, Flags = Flags & 7 WHERE ID = @0", chest.ID);
-							player.SendSuccessMessage("This chest is no longer a bank chest.", chest.BankID);
+							player.SendSuccessMessage("该箱子不再是储蓄状态.", chest.BankID);
 						}
 						else
 						{
@@ -448,72 +447,72 @@ namespace InfiniteChests
 							}
 
 							Database.Query("UPDATE Chests SET BankID = @0, Flags = Flags | 8 WHERE ID = @1", info.BankID, chest.ID);
-							player.SendSuccessMessage("This chest is now bank ID {0}.", info.BankID);
+							player.SendSuccessMessage("此箱子的储蓄ID为 {0}.", info.BankID);
 						}
 						break;
 					case ChestAction.SetPassword:
 						if (String.IsNullOrEmpty(chest.Account))
 						{
-							player.SendErrorMessage("This chest is not protected.");
+							player.SendErrorMessage("此箱子未被保护.");
 							break;
 						}
 						if (chest.Account != player.User.Name && !player.Group.HasPermission("infchests.admin.editall"))
 						{
-							player.SendErrorMessage("This chest is not yours.");
+							player.SendErrorMessage("你不是此箱子的主人!");
 							break;
 						}
 						if (String.Equals(info.Password, "remove", StringComparison.CurrentCultureIgnoreCase))
 						{
 							Database.Query("UPDATE Chests SET Password = '' WHERE ID = @0", chest.ID);
-							player.SendSuccessMessage("This chest is no longer password protected.", info.Password);
+							player.SendSuccessMessage("去除该箱子的密码保护.", info.Password);
 						}
 						else
 						{
 							Database.Query("UPDATE Chests SET Password = @0 WHERE ID = @1", TShock.Utils.HashPassword(info.Password), chest.ID);
-							player.SendSuccessMessage("This chest is now password protected with password '{0}'.", info.Password);
+							player.SendSuccessMessage("设定箱子密码完毕. (密码: \"{0}\")", info.Password);
 						}
 						break;
 					case ChestAction.SetRefill:
 						if (String.IsNullOrEmpty(chest.Account))
 						{
-							player.SendErrorMessage("This chest is not protected.");
+							player.SendErrorMessage("此箱子未被保护.");
 							break;
 						}
 						if (chest.Account != player.User.Name && !player.Group.HasPermission("infchests.admin.editall"))
 						{
-							player.SendErrorMessage("This chest is not yours.");
+							player.SendErrorMessage("你不是此箱子的主人!");
 							break;
 						}
 						if (info.RefillTime > 0)
 						{
 							Database.Query("UPDATE Chests SET Flags = Flags | 4, RefillTime = @0 WHERE ID = @1", info.RefillTime, chest.ID);
-							player.SendSuccessMessage("This chest will now refill with a delay of {0} second{1}.", info.RefillTime, info.RefillTime == 1 ? "" : "s");
+							player.SendSuccessMessage("启用箱子的自动填充", info.RefillTime);
 						}
 						else
 						{
 							Database.Query("UPDATE Chests SET Flags = (~(Flags & 4)) & (Flags | 4) WHERE ID = @0", chest.ID);
-							player.SendSuccessMessage("This chest will no{0} refill.", chest.IsRefill ? " longer" : "w");
+							player.SendSuccessMessage("{0}箱子的自动填充状态完毕.", chest.IsRefill ? "取消" : "开启");
 						}
 						break;
 					case ChestAction.Unprotect:
 						if (String.IsNullOrEmpty(chest.Account))
 						{
-							player.SendErrorMessage("This chest is not protected.");
+							player.SendErrorMessage("此箱子未被保护.");
 							break;
 						}
 						if (chest.Account != player.User.Name && !player.Group.HasPermission("infchests.admin.editall"))
 						{
-							player.SendErrorMessage("This chest is not yours.");
+							player.SendErrorMessage("你不是此箱子的主人!");
 							break;
 						}
 						Database.Query("UPDATE Chests SET Account = NULL, BankID = 0, Flags = 0 WHERE ID = @0", chest.ID);
-						player.SendSuccessMessage("This chest is now un-protected.");
+						player.SendSuccessMessage("停止保护该箱子.");
 						break;
 					default:
 #if !MULTI_USE
 						if (Infos.Any(p => p.X == x && p.Y == y))
 						{
-							player.SendErrorMessage("This chest is already in use.");
+							player.SendErrorMessage("该箱子正被别人使用中, 请等待.");
 							return;
 						}
 #endif
@@ -525,17 +524,17 @@ namespace InfiniteChests
 						{
 							if (String.IsNullOrEmpty(chest.HashedPassword))
 							{
-								player.SendErrorMessage("This chest is protected.");
+								player.SendErrorMessage("此箱子被保护.");
 								break;
 							}
 							else if (TShock.Utils.HashPassword(info.Password) != chest.HashedPassword)
 							{
-								player.SendErrorMessage("This chest is password protected.");
+								player.SendErrorMessage("该箱子需要密码开启.");
 								break;
 							}
 							else
 							{
-								player.SendSuccessMessage("Chest unlocked.");
+								player.SendSuccessMessage("解锁宝箱完毕.");
 								info.Password = "";
 							}
 						}
@@ -545,7 +544,7 @@ namespace InfiniteChests
 							int timeLeft;
 							if (Timers.TryGetValue(new Point(x, y), out timeLeft) && timeLeft > 0)
 							{
-								player.SendErrorMessage("This chest will refill in {0} second{1}.", timeLeft, timeLeft == 1 ? "" : "s");
+								player.SendErrorMessage("该箱子会在 {0} 秒后填充.", timeLeft);
 								break;
 							}
 						}
@@ -580,7 +579,7 @@ namespace InfiniteChests
 				info.Action = ChestAction.None;
 			}
 			else
-				player.SendErrorMessage("This chest is corrupted. Please destroy it.");
+				player.SendErrorMessage("此箱子数据被损坏. 请重新放置.");
 		}
 		void KillChest(int x, int y, int plr)
 		{
@@ -608,12 +607,12 @@ namespace InfiniteChests
 			}
 			else if (chest.Account != player.User.Name && !String.IsNullOrEmpty(chest.Account) && !player.Group.HasPermission("infchests.admin.editall"))
 			{
-				player.SendErrorMessage("This chest is protected.");
+				player.SendErrorMessage("此箱子被保护.");
 				player.SendTileSquare(x, y, 3);
 			}
 			else if (chest.IsBank)
 			{
-				player.SendErrorMessage("This chest is a bank chest.");
+				player.SendErrorMessage("该箱子为储蓄箱, 无法敲除.");
 				player.SendTileSquare(x, y, 3);
 			}
 			else if (chest.Items !=
@@ -660,7 +659,7 @@ namespace InfiniteChests
 				if (chest == null)
 				{
 					DecrementTransactions(plr);
-					player.SendErrorMessage("This chest is corrupted. Please remove it.");
+					player.SendErrorMessage("此箱子数据被损坏. 请重新放置.");
 					return;
 				}
 
@@ -674,7 +673,7 @@ namespace InfiniteChests
 						else
 						{
 							DecrementTransactions(plr);
-							player.SendErrorMessage("This bank chest was corrupted.");
+							player.SendErrorMessage("该储蓄箱数据被破坏.");
 							return;
 						}
 					}
@@ -745,7 +744,7 @@ namespace InfiniteChests
 		{
 			if (e.Parameters.Count != 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /cbank <ID or remove>");
+				e.Player.SendErrorMessage("语法无效! 正确: /cbank <序号 / remove>");
 				return;
 			}
 
@@ -756,10 +755,10 @@ namespace InfiniteChests
 				{
 					Infos[e.Player.Index].Action = ChestAction.SetBank;
 					Infos[e.Player.Index].BankID = -1;
-					e.Player.SendInfoMessage("Open a chest to remove its bank ID.", e.Parameters[0].ToLower());
+					e.Player.SendInfoMessage("选中箱子以除去其储蓄账户.", e.Parameters[0].ToLower());
 				}
 				else
-					e.Player.SendErrorMessage("Invalid bank ID.");
+					e.Player.SendErrorMessage("储蓄账户序号无效.");
 				return;
 			}
 
@@ -778,14 +777,14 @@ namespace InfiniteChests
 
 				if (bankID > maxBankIDs)
 				{
-					e.Player.SendErrorMessage("You have exceeded your maximum number of bank IDs.");
+					e.Player.SendErrorMessage("你超过了最大设定账户界限.");
 					return;
 				}
 			}
 
 			Infos[e.Player.Index].Action = ChestAction.SetBank;
 			Infos[e.Player.Index].BankID = bankID;
-			e.Player.SendInfoMessage("Open a chest to set its bank ID to {0}.", bankID);
+			e.Player.SendInfoMessage("选中箱子以设定储蓄账户序号为 {0}.", bankID);
 		}
 		void ConvertChests(CommandArgs e)
 		{
@@ -808,7 +807,7 @@ namespace InfiniteChests
 					}
 				}
 
-				e.Player.SendSuccessMessage("Converted {0} chest{1}.", converted, converted == 1 ? "" : "s");
+				e.Player.SendSuccessMessage("转换了 {0} 个箱子.", converted);
 				if (converted > 0)
 					TShock.Utils.SaveWorld();
 			}).LogExceptions();
@@ -819,32 +818,32 @@ namespace InfiniteChests
 			info.Action = ChestAction.None;
 			info.BankID = 0;
 			info.Password = null;
-			e.Player.SendInfoMessage("Stopped selecting a chest.");
+			e.Player.SendInfoMessage("停止选中箱子.");
 		}
 		void Info(CommandArgs e)
 		{
 			Infos[e.Player.Index].Action = ChestAction.GetInfo;
-			e.Player.SendInfoMessage("Open a chest to get its info.");
+			e.Player.SendInfoMessage("选中箱子以获取其信息.");
 		}
 		void Lock(CommandArgs e)
 		{
 			if (e.Parameters.Count != 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /clock <password>");
+				e.Player.SendErrorMessage("语法无效! 正确: /clock <密码>");
 				return;
 			}
 
 			Infos[e.Player.Index].Action = ChestAction.SetPassword;
 			Infos[e.Player.Index].Password = e.Parameters[0];
 			if (e.Parameters[0].ToLower() == "remove")
-				e.Player.SendInfoMessage("Open a chest to disable a password on it.");
+				e.Player.SendInfoMessage("选中箱子以禁用密码保护.");
 			else
-				e.Player.SendInfoMessage("Open a chest to set its password to '{0}'.", e.Parameters[0]);
+				e.Player.SendInfoMessage("选中箱子以启用密码保护: 密码为 \"{0}\".", e.Parameters[0]);
 		}
 		void Protect(CommandArgs e)
 		{
 			Infos[e.Player.Index].Action = ChestAction.Protect;
-			e.Player.SendInfoMessage("Open a chest to protect it.");
+			e.Player.SendInfoMessage("选中箱子以开启保护状态.");
 		}
 		void Prune(CommandArgs e)
 		{
@@ -891,7 +890,7 @@ namespace InfiniteChests
 						}
 					}
 
-					e.Player.SendSuccessMessage("Pruned {0} empty chest{1}.", empty, empty == 1 ? "" : "s");
+					e.Player.SendSuccessMessage("清除了 {0} 个空箱子.", empty);
 
 					using (var reader = Database.QueryReader("SELECT ID, X, Y FROM Chests WHERE WorldID = @0", Main.worldID))
 					{
@@ -912,7 +911,7 @@ namespace InfiniteChests
 					for (int i = 0; i < pruneID.Count; i++)
 						Database.Query("DELETE FROM Chests WHERE ID = @0", pruneID[i]);
 
-					e.Player.SendSuccessMessage("Pruned {0} corrupted chest{1}.", corrupted, corrupted == 1 ? "" : "s");
+					e.Player.SendSuccessMessage("清除了 {0} 个数据损坏的宝箱.", corrupted);
 					if (corrupted + empty > 0)
 						TShock.Utils.SaveWorld();
 				}).LogExceptions();
@@ -921,7 +920,7 @@ namespace InfiniteChests
 		{
 			if (e.Parameters.Count > 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /crefill [interval]");
+				e.Player.SendErrorMessage("语法无效! 正确: /crefill [间隔(秒)]");
 				return;
 			}
 			Infos[e.Player.Index].RefillTime = 0;
@@ -932,26 +931,26 @@ namespace InfiniteChests
 				{
 					Infos[e.Player.Index].Action = ChestAction.SetRefill;
 					Infos[e.Player.Index].RefillTime = time;
-					e.Player.SendInfoMessage("Open a chest to make it refill with an interval of {0} second{1}.", time, time == 1 ? "" : "s");
+					e.Player.SendInfoMessage("选中箱子来设定其自动填充状态: 填补间隔为 {0} 秒.", time);
 					return;
 				}
-				e.Player.SendErrorMessage("Invalid interval!");
+				e.Player.SendErrorMessage("间隔数值无效!");
 			}
 			else
 			{
 				Infos[e.Player.Index].Action = ChestAction.SetRefill;
-				e.Player.SendInfoMessage("Open a chest to toggle its refill status.");
+				e.Player.SendInfoMessage("选中箱子以更改其自动填充状态.");
 			}
 		}
 		void PublicProtect(CommandArgs e)
 		{
 			Infos[e.Player.Index].Action = ChestAction.TogglePublic;
-			e.Player.SendInfoMessage("Open a chest to toggle its public status.");
+			e.Player.SendInfoMessage("选中箱子以更改其公共状态.");
 		}
 		void RegionProtect(CommandArgs e)
 		{
 			Infos[e.Player.Index].Action = ChestAction.ToggleRegion;
-			e.Player.SendInfoMessage("Open a chest to toggle its region share status.");
+			e.Player.SendInfoMessage("选中箱子以更改其区域共享状态.");
 		}
 		void ReverseConvertChests(CommandArgs e)
 		{
@@ -962,7 +961,7 @@ namespace InfiniteChests
 					reader.Read();
 					if (reader.Get<int>("Count") > 1000)
 					{
-						e.Player.SendErrorMessage("The chests cannot be reverse-converted without losing data.");
+						e.Player.SendErrorMessage("当前数据库中箱子数目({0})超出地图最大限制(1000), 故无法转换.", reader.Get<int>("Count"));
 						return;
 					}
 				}
@@ -994,7 +993,7 @@ namespace InfiniteChests
 					}
 				}
 				Database.Query("DELETE FROM Chests WHERE WorldID = @0", Main.worldID);
-				e.Player.SendSuccessMessage("Reverse converted {0} chests.", i);
+				e.Player.SendSuccessMessage("保存了 {0} 个宝箱的数据至地图.", i);
 				if (i > 0)
 					TShock.Utils.SaveWorld();
 			}).LogExceptions();
@@ -1003,16 +1002,16 @@ namespace InfiniteChests
 		{
 			if (e.Parameters.Count != 1)
 			{
-				e.Player.SendErrorMessage("Invalid syntax! Proper syntax: /cunlock <password>");
+				e.Player.SendErrorMessage("语法无效! 正确: /cunlock <密码>");
 				return;
 			}
 			Infos[e.Player.Index].Password = e.Parameters[0];
-			e.Player.SendInfoMessage("Open a chest to unlock it.");
+			e.Player.SendInfoMessage("请开启需解锁的箱子");
 		}
 		void Unprotect(CommandArgs e)
 		{
 			Infos[e.Player.Index].Action = ChestAction.Unprotect;
-			e.Player.SendInfoMessage("Open a chest to unprotect it.");
+			e.Player.SendInfoMessage("选中箱子以去除保护.");
 		}
 	}
 
