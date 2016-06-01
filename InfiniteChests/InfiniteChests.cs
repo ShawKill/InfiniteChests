@@ -205,64 +205,64 @@ namespace InfiniteChests
 		}
 		void OnInitialize(EventArgs e)
 		{
-			Commands.ChatCommands.Add(new Command("infchests.chest.bank", Bank, "cbank")
+			Commands.ChatCommands.Add(new Command("infchests.chest.bank", Bank, "cbank", "宝箱储蓄")
 			{
 				DoLog = false,
 				HelpText = "转换选中箱子的储蓄状态."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.chest.deselect", Deselect, "ccset")
+			Commands.ChatCommands.Add(new Command("infchests.chest.deselect", Deselect, "ccset", "去选择")
 			{
 				AllowServer = false,
 				HelpText = "取消对选中箱子的[c/FF00FF:选择]."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.admin.info", Info, "cinfo")
+			Commands.ChatCommands.Add(new Command("infchests.admin.info", Info, "cinfo", "宝箱信息")
 			{
 				AllowServer = false,
 				HelpText = "获取选中箱子的信息."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.chest.lock", Lock, "clock")
+			Commands.ChatCommands.Add(new Command("infchests.chest.lock", Lock, "clock", "密码锁宝箱")
 			{
 				DoLog = false,
 				HelpText = "使用密码保护选中箱子. 输入 \"remove\" 作为密码以除去保护."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.admin.convert", ConvertChests, "convchests")
+			Commands.ChatCommands.Add(new Command("infchests.admin.convert", ConvertChests, "convchests", "转换宝箱")
 			{
 				HelpText = "转换地图中的宝箱数据至数据库."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.admin.prune", Prune, "prunechests")
+			Commands.ChatCommands.Add(new Command("infchests.admin.prune", Prune, "prunechests", "去除宝箱")
 			{
 				HelpText = "去除空箱子."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.chest.public", PublicProtect, "cpset")
+			Commands.ChatCommands.Add(new Command("infchests.chest.public", PublicProtect, "cpset", "宝箱公共状态")
 			{
 				AllowServer = false,
 				HelpText = "转换选中箱子的公共状态."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.admin.refill", Refill, "crefill")
+			Commands.ChatCommands.Add(new Command("infchests.admin.refill", Refill, "crefill", "宝箱填充")
 			{
 				AllowServer = false,
 				HelpText = "转换选中箱子的自动填充状态."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.chest.region", RegionProtect, "crset")
+			Commands.ChatCommands.Add(new Command("infchests.chest.region", RegionProtect, "crset", "宝箱区域状态")
 			{
 				AllowServer = false,
 				HelpText = "转换选中箱子的区域共享状态."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.admin.rconvert", ReverseConvertChests, "rconvchests")
+			Commands.ChatCommands.Add(new Command("infchests.admin.rconvert", ReverseConvertChests, "rconvchests", "反转换宝箱")
 			{
 				HelpText = "转换数据库中的宝箱数据至地图."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.chest.protect", Protect, "cset")
+			Commands.ChatCommands.Add(new Command("infchests.chest.protect", Protect, "cset", "保护")
 			{
 				AllowServer = false,
 				HelpText = "保护选中箱子."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.chest.unlock", Unlock, "cunlock")
+			Commands.ChatCommands.Add(new Command("infchests.chest.unlock", Unlock, "cunlock", "解锁")
 			{
 				DoLog = false,
 				HelpText = "使用密码解锁选中箱子."
 			});
-			Commands.ChatCommands.Add(new Command("infchests.chest.unprotect", Unprotect, "cunset")
+			Commands.ChatCommands.Add(new Command("infchests.chest.unprotect", Unprotect, "cunset", "去保护")
 			{
 				HelpText = "取消选中箱子的保护."
 			});
