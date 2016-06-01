@@ -28,7 +28,7 @@ namespace InfiniteChests
 
 		public override string Author
 		{
-			get { return "MarioE"; }
+			get { return "\b\b\bMarioE|CN:MistZZT"; }
 		}
 		public override string Description
 		{
@@ -36,7 +36,7 @@ namespace InfiniteChests
 		}
 		public override string Name
 		{
-			get { return "InfiniteChests"; }
+			get { return "InfChests"; }
 		}
 		public override Version Version
 		{
